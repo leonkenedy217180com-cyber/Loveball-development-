@@ -3,55 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatt Pro</title>
+    <title>Chatt Ultimate</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --p: #007bff; --bg: #f8f9fa; --txt: #333; --chat-bg: #e5ddd5; }
+        :root { --p: #007bff; --bg: #f4f6f9; --txt: #222; --chat-bg: #e5ddd5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
         .screen { display: none; height: 100vh; flex-direction: column; width: 100%; position: absolute; background: var(--bg); }
         .active { display: flex; }
 
-        /* الهيدر الرئيسي */
-        .hdr { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .hdr-icon { font-size: 24px; cursor: pointer; color: #555; }
+        /* هيدر عصري - الاسم أسود */
+        .hdr { background: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .hdr-title { color: black; font-weight: 800; font-size: 20px; }
+        .hdr-icon { font-size: 22px; cursor: pointer; color: #666; transition: 0.2s; }
+        .hdr-icon:hover { color: var(--p); }
+        .back-icon { font-size: 28px; } /* أيقونة راجع أرتب */
 
         /* قائمة المحادثات */
-        .inbox { flex: 1; overflow-y: auto; padding: 15px; }
-        .user-card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; color: var(--p); font-weight: bold; }
+        .inbox { flex: 1; overflow-y: auto; padding: 10px; }
+        .user-row { background: white; padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; border: 1px solid #eee; }
+        .user-row:active { transform: scale(0.98); background: #fafafa; }
+        .pfp { width: 50px; height: 50px; border-radius: 15px; background: #eee; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: var(--p); font-weight: bold; font-size: 20px; }
 
         /* منطقة الدردشة */
-        #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; background-color: var(--chat-bg); }
-        .bubble { padding: 10px 15px; border-radius: 18px; max-width: 75%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .me { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
-        .them { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
-
+        #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 6px; background-size: cover; background-position: center; background-color: var(--chat-bg); }
+        .bubble-container { display: flex; flex-direction: column; max-width: 75%; position: relative; }
+        .me-c { align-self: flex-end; }
+        .them-c { align-self: flex-start; }
+        .bubble { padding: 10px 15px; border-radius: 18px; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.08); position: relative; cursor: pointer; }
+        .me { background: #dcf8c6; border-bottom-right-radius: 2px; color: #333; }
+        .them { background: white; border-bottom-left-radius: 2px; color: #333; }
+        
+        /* الصحين والوقت */
+        .meta { font-size: 11px; color: #888; display: flex; align-items: center; gap: 3px; justify-content: flex-end; margin-top: 2px; padding: 0 5px; }
+        .ticks { color: #999; } /* صحين رمادية default */
+        
         /* شريط الإدخال */
-        .in-bar { background: white; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #eee; align-items: center; }
-        .in-bar input { flex: 1; border: none; background: #f0f2f5; padding: 12px 18px; border-radius: 25px; outline: none; }
-        .send-btn { background: var(--p); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .in-bar { background: white; padding: 10px; display: flex; gap: 10px; border-top: 1px solid #eee; align-items: center; }
+        .in-bar input { flex: 1; border: none; background: #f0f2f5; padding: 13px 20px; border-radius: 25px; outline: none; font-size: 15px; }
+        .send-btn { background: var(--p); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         /* الإعدادات */
-        .set-item { background: white; padding: 18px; border-radius: 15px; margin: 10px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .set-box { background: white; padding: 18px; border-radius: 16px; margin: 10px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #eee; }
+        
+        /* قائمة سياقية (الحذف والرد) */
+        .context-menu { display: none; position: fixed; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index: 100; overflow: hidden; width: 120px; }
+        .context-item { padding: 12px 15px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .context-item:hover { background: #f5f5f5; }
+        
+        /* شريط الرد */
+        #reply-bar { display: none; background: #f0f0f0; padding: 8px 15px; border-radius: 10px; margin: 0 10px 10px 10px; font-size: 13px; color: #555; border-right: 3px solid var(--p); justify-content: space-between; }
+
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
+    <div id="msg-menu" class="context-menu">
+        <div class="context-item" onclick="replyMsg()">💬 رد</div>
+        <div class="context-item" style="color:red;" onclick="deleteMsg()">🗑️ حذف</div>
+    </div>
+
     <div id="login-scr" class="screen active" style="justify-content:center; align-items:center; background: linear-gradient(135deg, #007bff, #6610f2);">
-        <div style="background:white; padding:40px; border-radius:25px; width:80%; max-width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h1 style="margin-top:0; color:#333;">Chatt</h1>
+        <div style="background:white; padding:40px; border-radius:30px; width:80%; max-width:360px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
+            <h1 style="margin:0 0 25px 0; color:#333; font-weight:800;">Chatt</h1>
             <input type="text" id="reg-name" placeholder="الاسم الشخصي">
             <input type="text" id="reg-user" placeholder="اليوزر نيم">
-            <button onclick="saveUser()" style="width:100%; padding:14px; background:var(--p); color:white; border:none; border-radius:12px; font-weight:bold; font-size:16px;">ابدأ الآن</button>
+            <button onclick="saveUser()" style="width:100%; padding:15px; background:var(--p); color:white; border:none; border-radius:12px; font-weight:bold; font-size:16px;">ابدأ</button>
         </div>
     </div>
 
     <div id="main-scr" class="screen">
         <div class="hdr">
             <span class="hdr-icon" onclick="goSet()">⚙️</span>
-            <span>محادثاتي</span>
+            <span class="hdr-title">محادثاتي</span>
             <span class="hdr-icon" onclick="search()">🔍</span>
         </div>
         <div id="list" class="inbox"></div>
@@ -59,13 +84,21 @@
 
     <div id="chat-scr" class="screen">
         <div class="hdr">
-            <span class="hdr-icon" onclick="goMain()">🔙</span>
-            <span id="friend-name">...</span>
-            <span style="width:24px;"></span>
+            <span class="hdr-icon back-icon" onclick="goMain()">🔙</span>
+            <div style="text-align:center;">
+                <div id="friend-name" class="hdr-title">...</div>
+                <div style="font-size:11px; color:green;">متصل الآن</div> </div>
+            <div id="friend-pfp-hdr" class="pfp" style="width:35px; height:35px; border-radius:10px; font-size:14px;"></div>
         </div>
         <div id="chat-area"></div>
+        
+        <div id="reply-bar">
+            <span id="reply-txt">...</span>
+            <span onclick="cancelReply()" style="cursor:pointer;">✕</span>
+        </div>
+
         <div class="in-bar">
-            <input type="text" id="msg-in" placeholder="اكتب رسالة...">
+            <input type="text" id="msg-in" placeholder="اكتب رسالتك...">
             <button class="send-btn" onclick="send()">➤</button>
         </div>
     </div>
@@ -73,22 +106,28 @@
     <div id="set-scr" class="screen">
         <div class="hdr">
             <span class="hdr-icon" onclick="goMain()">🔙</span>
-            <span>الإعدادات</span>
-            <span style="width:24px;"></span>
+            <span class="hdr-title">الإعدادات</span>
+            <span></span>
         </div>
         <div style="margin-top:20px;">
-            <div class="set-item" onclick="document.getElementById('bg-up').click()">
-                <span>تغيير خلفية الدردشة من المعرض</span>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div id="my-pfp-set" class="pfp" style="width:80px; height:80px; border-radius:25px; margin:auto; font-size:30px;"></div>
+                <button onclick="document.getElementById('pfp-up').click()" style="margin-top:10px; padding:5px 10px; background:#eee; border:none; border-radius:5px;">تغيير الصورة</button>
+                <input type="file" id="pfp-up" class="hidden" accept="image/*" onchange="updatePfp(event)">
+            </div>
+
+            <div class="set-box" onclick="document.getElementById('bg-up').click()">
+                <span>تغيير خلفية الدردشة</span>
                 <span>🖼️</span>
             </div>
             <input type="file" id="bg-up" class="hidden" accept="image/*" onchange="updateBg(event)">
 
-            <div class="set-item" onclick="resetBg()">
-                <span>حذف الخلفية المخصصة</span>
+            <div class="set-box" onclick="resetBg()">
+                <span>استعادة الخلفية الافتراضية</span>
                 <span>🔄</span>
             </div>
 
-            <div class="set-item" onclick="clearLocal()" style="margin-top:40px; border:1px solid #ffcccc;">
+            <div class="set-box" onclick="logout()" style="margin-top:40px; border-color:#ffcccc;">
                 <span style="color:red; font-weight:bold;">تسجيل الخروج</span>
                 <span>🚪</span>
             </div>
@@ -100,12 +139,14 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaGNxa2pjbmN1anZyenBid3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODI2MDIsImV4cCI6MjA5MjQ1ODYwMn0.M2mUlbaPsBYaS59zYVfzW42Kga0_w8o2mm3ZFPjOxu8';
         const _db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let me = localStorage.getItem('chat_u') || "";
+        let me = localStorage.getItem('u_u') || "";
         let friend = "";
+        let selectedMsgId = null;
+        let replyingToId = null;
 
-        // تطبيق الخلفية المحفوظة فوراً
-        function applyBg() {
-            const bg = localStorage.getItem('chat_bg');
+        // تطبيق الخلفية والصورة
+        function applySettings() {
+            const bg = localStorage.getItem('u_bg');
             if(bg) document.getElementById('chat-area').style.backgroundImage = `url(${bg})`;
             else document.getElementById('chat-area').style.backgroundImage = 'none';
         }
@@ -117,26 +158,33 @@
             const u = document.getElementById('reg-user').value;
             if(n && u) {
                 await _db.from('profiles').upsert([{ username: u, full_name: n }]);
-                localStorage.setItem('chat_u', u);
+                localStorage.setItem('u_u', u);
                 me = u; goMain();
             }
         }
 
         function goMain() { show('main-scr'); loadInbox(); }
-        function goSet() { show('set-scr'); }
-        function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function goSet() { show('set-scr'); updateMyPfpView(); }
+        function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); cancelReply(); hideMenu(); }
 
         async function search() {
-            const f = prompt("أدخل يوزر الصديق للبحث عنه:");
+            const f = prompt("يوزر الصديق:");
             if(!f) return;
             const { data } = await _db.from('profiles').select('*').eq('username', f).single();
-            if(data) { friend = f; openChat(); } else { alert("اليوزر غير موجود!"); }
+            if(data) { friend = f; openChat(); } else { alert("غير موجود!"); }
         }
 
-        function openChat() { 
+        async function openChat() { 
             show('chat-scr'); 
             document.getElementById('friend-name').innerText = friend; 
-            applyBg();
+            applySettings();
+            
+            // تحميل بروفايل الصديق بالهيدر
+            const { data } = await _db.from('profiles').select('pfp_url').eq('username', friend).single();
+            const hdrPfp = document.getElementById('friend-pfp-hdr');
+            if(data?.pfp_url) hdrPfp.style.backgroundImage = `url(${data.pfp_url})`;
+            else { hdrPfp.style.backgroundImage = 'none'; hdrPfp.innerText = friend[0].toUpperCase(); }
+
             loadMsgs(); 
         }
 
@@ -145,11 +193,25 @@
             const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${me},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${me})`).order('created_at', { ascending: true });
             const area = document.getElementById('chat-area');
             area.innerHTML = '';
+            
             data?.forEach(m => {
-                const d = document.createElement('div');
-                d.className = 'bubble ' + (m.sender === me ? 'me' : 'them');
-                d.textContent = m.content;
-                area.appendChild(d);
+                const isMe = m.sender === me;
+                const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                const cont = document.createElement('div');
+                cont.className = `bubble-container ${isMe ? 'me-c' : 'them-c'}`;
+                
+                cont.innerHTML = `
+                    <div class="bubble ${isMe ? 'me' : 'them'}" oncontextmenu="showMenu(event, ${m.id}, '${m.content}')" onclick="hideMenu()">
+                        ${m.reply_to_content ? `<div style="font-size:11px; color:#555; background:rgba(0,0,0,0.05); padding:3px 5px; border-radius:5px; margin-bottom:5px; border-right:2px solid var(--p);">رد على: ${m.reply_to_content}</div>` : ''}
+                        ${m.content}
+                        <div class="meta">
+                            <span>${time}</span>
+                            ${isMe ? '<span class="ticks">✓✓</span>' : ''}
+                        </div>
+                    </div>
+                `;
+                area.appendChild(cont);
             });
             area.scrollTop = area.scrollHeight;
         }
@@ -157,44 +219,103 @@
         async function send() {
             const i = document.getElementById('msg-in');
             if(!i.value) return;
-            await _db.from('messages').insert([{ content: i.value, sender: me, receiver: friend }]);
-            i.value = ''; loadMsgs();
+            
+            const msgData = { content: i.value, sender: me, receiver: friend };
+            if(replyingToId) {
+                msgData.reply_to_id = replyingToId;
+                msgData.reply_to_content = document.getElementById('reply-txt').innerText.replace('رد على: ', '');
+            }
+
+            await _db.from('messages').insert([msgData]);
+            i.value = ''; cancelReply(); loadMsgs();
         }
 
         async function loadInbox() {
             const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
             const users = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
             const list = document.getElementById('list');
-            list.innerHTML = users.length ? '' : '<p style="text-align:center; color:#999; margin-top:50px;">لا توجد محادثات نشطة</p>';
-            users.forEach(u => {
+            list.innerHTML = users.length ? '' : '<p style="text-align:center; color:#999; margin-top:50px;">لا توجد محادثات</p>';
+            
+            users.forEach(async u => {
+                // تحميل بروفايل كل مستخدم
+                const { data: prof } = await _db.from('profiles').select('pfp_url, full_name').eq('username', u).single();
+                
                 const d = document.createElement('div');
-                d.className = 'user-card';
-                d.innerHTML = `<div class="avatar">${u[0].toUpperCase()}</div><b>${u}</b>`;
+                d.className = 'user-row';
+                d.innerHTML = `
+                    <div class="pfp" style="${prof?.pfp_url ? `background-image:url(${prof.pfp_url});` : ''}">
+                        ${prof?.pfp_url ? '' : u[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <b>${prof?.full_name || u}</b><br>
+                        <span style="font-size:12px; color:#888;">@${u}</span>
+                    </div>
+                `;
                 d.onclick = () => { friend = u; openChat(); };
                 list.appendChild(d);
             });
         }
 
-        function updateBg(e) {
+        // البروفايل والخلفية
+        async function updateMyPfpView() {
+            const { data } = await _db.from('profiles').select('pfp_url').eq('username', me).single();
+            const p = document.getElementById('my-pfp-set');
+            if(data?.pfp_url) p.style.backgroundImage = `url(${data.pfp_url})`;
+            else { p.style.backgroundImage = 'none'; p.innerText = me[0].toUpperCase(); }
+        }
+
+        function updatePfp(e) {
             const reader = new FileReader();
-            reader.onload = (f) => {
-                localStorage.setItem('chat_bg', f.target.result);
-                applyBg();
-                alert("تم تحديث الخلفية!");
+            reader.onload = async (f) => {
+                const base64 = f.target.result;
+                await _db.from('profiles').update({ pfp_url: base64 }).eq('username', me);
+                updateMyPfpView();
+                alert("تم تحديث صورة البروفايل!");
             };
             reader.readAsDataURL(e.target.files[0]);
         }
 
-        function resetBg() {
-            localStorage.removeItem('chat_bg');
-            applyBg();
-            alert("تم حذف الخلفية المخصصة");
+        function updateBg(e) {
+            const reader = new FileReader();
+            reader.onload = (f) => { localStorage.setItem('u_bg', f.target.result); applySettings(); alert("تم تحديث الخلفية!"); };
+            reader.readAsDataURL(e.target.files[0]);
         }
 
-        function clearLocal() { localStorage.clear(); location.reload(); }
+        function resetBg() { localStorage.removeItem('u_bg'); applySettings(); alert("تم حذف الخلفية"); }
+        function logout() { localStorage.clear(); location.reload(); }
 
+        // القائمة السياقية (رد وحذف)
+        function showMenu(e, id, content) {
+            e.preventDefault();
+            selectedMsgId = id;
+            selectedMsgContent = content;
+            const menu = document.getElementById('msg-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        }
+
+        function hideMenu() { document.getElementById('msg-menu').style.display = 'none'; }
+
+        async function deleteMsg() {
+            if(!confirm("هل أنت متأكد من حذف هذه الرسالة؟")) return;
+            await _db.from('messages').delete().eq('id', selectedMsgId);
+            hideMenu(); loadMsgs();
+        }
+
+        function replyMsg() {
+            replyingToId = selectedMsgId;
+            const bar = document.getElementById('reply-bar');
+            document.getElementById('reply-txt').innerText = `رد على: ${selectedMsgContent}`;
+            bar.style.display = 'flex';
+            hideMenu();
+            document.getElementById('msg-in').focus();
+        }
+
+        function cancelReply() { replyingToId = null; document.getElementById('reply-bar').style.display = 'none'; }
+
+        window.onclick = hideMenu; // إخفاء القائمة عند الضغط في أي مكان
         setInterval(loadMsgs, 3000);
     </script>
 </body>
 </html>
-
