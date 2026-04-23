@@ -3,93 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatt Pro Max</title>
+    <title>Chatt Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --p: #007bff; --bg: #f0f2f5; --txt: #333; --chat-bg: #e5ddd5; }
+        :root { --p: #007bff; --bg: #f8f9fa; --txt: #333; --chat-bg: #e5ddd5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
         .screen { display: none; height: 100vh; flex-direction: column; width: 100%; position: absolute; background: var(--bg); }
         .active { display: flex; }
 
-        /* الهيدر */
-        .hdr { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; font-weight: bold; }
-        
-        /* شاشة المحادثة */
-        #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; background-image: none; background-color: var(--chat-bg); }
-        .bubble { padding: 10px 15px; border-radius: 18px; max-width: 75%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        /* الهيدر الرئيسي */
+        .hdr { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .hdr-icon { font-size: 24px; cursor: pointer; color: #555; }
+
+        /* قائمة المحادثات */
+        .inbox { flex: 1; overflow-y: auto; padding: 15px; }
+        .user-card { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; color: var(--p); font-weight: bold; }
+
+        /* منطقة الدردشة */
+        #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; background-color: var(--chat-bg); }
+        .bubble { padding: 10px 15px; border-radius: 18px; max-width: 75%; font-size: 15px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .me { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
         .them { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
 
         /* شريط الإدخال */
-        .in-bar { background: white; padding: 10px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
-        .in-bar input { flex: 1; border: none; background: #f0f2f5; padding: 12px; border-radius: 25px; outline: none; }
+        .in-bar { background: white; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #eee; align-items: center; }
+        .in-bar input { flex: 1; border: none; background: #f0f2f5; padding: 12px 18px; border-radius: 25px; outline: none; }
+        .send-btn { background: var(--p); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; }
 
         /* الإعدادات */
-        .settings-panel { padding: 20px; }
-        .opt-row { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .hidden-file { display: none; }
-
-        /* الناف بار */
-        .nav { height: 60px; background: white; border-top: 1px solid #ddd; display: flex; justify-content: space-around; align-items: center; }
-        .nav i { font-size: 24px; cursor: pointer; color: #666; }
-        .active-i { color: var(--p); }
+        .set-item { background: white; padding: 18px; border-radius: 15px; margin: 10px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-scr" class="screen active" style="justify-content:center; align-items:center;">
-        <div style="background:white; padding:30px; border-radius:20px; width:80%; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1);">
-            <h2>Chatt</h2>
-            <input type="text" id="reg-name" placeholder="الاسم المستعار">
+    <div id="login-scr" class="screen active" style="justify-content:center; align-items:center; background: linear-gradient(135deg, #007bff, #6610f2);">
+        <div style="background:white; padding:40px; border-radius:25px; width:80%; max-width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h1 style="margin-top:0; color:#333;">Chatt</h1>
+            <input type="text" id="reg-name" placeholder="الاسم الشخصي">
             <input type="text" id="reg-user" placeholder="اليوزر نيم">
-            <button onclick="saveUser()" style="width:100%; padding:12px; background:var(--p); color:white; border:none; border-radius:10px;">دخول</button>
+            <button onclick="saveUser()" style="width:100%; padding:14px; background:var(--p); color:white; border:none; border-radius:12px; font-weight:bold; font-size:16px;">ابدأ الآن</button>
         </div>
     </div>
 
     <div id="main-scr" class="screen">
-        <div class="hdr">محادثاتي <span onclick="search()">🔍</span></div>
-        <div id="list" style="flex:1; overflow-y:auto; padding:15px;"></div>
-        <div class="nav">
-            <span onclick="goMain()" class="active-i">💬</span>
-            <span onclick="goSet()">⚙️</span>
+        <div class="hdr">
+            <span class="hdr-icon" onclick="goSet()">⚙️</span>
+            <span>محادثاتي</span>
+            <span class="hdr-icon" onclick="search()">🔍</span>
         </div>
+        <div id="list" class="inbox"></div>
     </div>
 
     <div id="chat-scr" class="screen">
         <div class="hdr">
-            <span onclick="goMain()">🔙</span>
-            <span id="friend-name">اسم الصديق</span>
-            <span onclick="goSet()">⚙️</span>
+            <span class="hdr-icon" onclick="goMain()">🔙</span>
+            <span id="friend-name">...</span>
+            <span style="width:24px;"></span>
         </div>
         <div id="chat-area"></div>
         <div class="in-bar">
-            <input type="text" id="msg-in" placeholder="اكتب رسالتك...">
-            <button onclick="send()" style="border:none; background:var(--p); color:white; border-radius:50%; width:45px; height:45px;">➤</button>
+            <input type="text" id="msg-in" placeholder="اكتب رسالة...">
+            <button class="send-btn" onclick="send()">➤</button>
         </div>
     </div>
 
     <div id="set-scr" class="screen">
-        <div class="hdr">الإعدادات <span onclick="goMain()">✕</span></div>
-        <div class="settings-panel">
-            <div class="opt-row" onclick="document.getElementById('bg-upload').click()">
-                <span>تغيير خلفية المحادثة (من المعرض)</span>
+        <div class="hdr">
+            <span class="hdr-icon" onclick="goMain()">🔙</span>
+            <span>الإعدادات</span>
+            <span style="width:24px;"></span>
+        </div>
+        <div style="margin-top:20px;">
+            <div class="set-item" onclick="document.getElementById('bg-up').click()">
+                <span>تغيير خلفية الدردشة من المعرض</span>
                 <span>🖼️</span>
             </div>
-            <input type="file" id="bg-upload" class="hidden-file" accept="image/*" onchange="updateBg(event)">
-            
-            <div class="opt-row" onclick="resetBg()">
-                <span>استعادة الخلفية الافتراضية</span>
+            <input type="file" id="bg-up" class="hidden" accept="image/*" onchange="updateBg(event)">
+
+            <div class="set-item" onclick="resetBg()">
+                <span>حذف الخلفية المخصصة</span>
                 <span>🔄</span>
             </div>
 
-            <div class="opt-row">
-                <span>وضع الليلي</span>
-                <input type="checkbox" onchange="toggleDark(this)">
-            </div>
-
-            <div class="opt-row" onclick="clearLocal()">
-                <span style="color:red;">تسجيل الخروج</span>
+            <div class="set-item" onclick="clearLocal()" style="margin-top:40px; border:1px solid #ffcccc;">
+                <span style="color:red; font-weight:bold;">تسجيل الخروج</span>
                 <span>🚪</span>
             </div>
         </div>
@@ -103,9 +103,12 @@
         let me = localStorage.getItem('chat_u') || "";
         let friend = "";
 
-        // تحميل الخلفية المحفوظة
-        const savedBg = localStorage.getItem('chat_bg');
-        if(savedBg) document.getElementById('chat-area').style.backgroundImage = `url(${savedBg})`;
+        // تطبيق الخلفية المحفوظة فوراً
+        function applyBg() {
+            const bg = localStorage.getItem('chat_bg');
+            if(bg) document.getElementById('chat-area').style.backgroundImage = `url(${bg})`;
+            else document.getElementById('chat-area').style.backgroundImage = 'none';
+        }
 
         if(me) goMain();
 
@@ -124,13 +127,18 @@
         function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
         async function search() {
-            const f = prompt("يوزر الصديق:");
+            const f = prompt("أدخل يوزر الصديق للبحث عنه:");
             if(!f) return;
             const { data } = await _db.from('profiles').select('*').eq('username', f).single();
-            if(data) { friend = f; openChat(); } else { alert("غير موجود!"); }
+            if(data) { friend = f; openChat(); } else { alert("اليوزر غير موجود!"); }
         }
 
-        function openChat() { show('chat-scr'); document.getElementById('friend-name').innerText = friend; loadMsgs(); }
+        function openChat() { 
+            show('chat-scr'); 
+            document.getElementById('friend-name').innerText = friend; 
+            applyBg();
+            loadMsgs(); 
+        }
 
         async function loadMsgs() {
             if(!document.getElementById('chat-scr').classList.contains('active')) return;
@@ -157,36 +165,30 @@
             const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
             const users = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
             const list = document.getElementById('list');
-            list.innerHTML = users.length ? '' : '<p style="text-align:center;color:#999;">لا توجد محادثات</p>';
+            list.innerHTML = users.length ? '' : '<p style="text-align:center; color:#999; margin-top:50px;">لا توجد محادثات نشطة</p>';
             users.forEach(u => {
                 const d = document.createElement('div');
-                d.style = "background:white; padding:15px; border-radius:12px; margin-bottom:10px; cursor:pointer; font-weight:bold;";
-                d.innerText = u;
+                d.className = 'user-card';
+                d.innerHTML = `<div class="avatar">${u[0].toUpperCase()}</div><b>${u}</b>`;
                 d.onclick = () => { friend = u; openChat(); };
                 list.appendChild(d);
             });
         }
 
-        function updateBg(event) {
-            const file = event.target.files[0];
+        function updateBg(e) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const url = e.target.result;
-                document.getElementById('chat-area').style.backgroundImage = `url(${url})`;
-                localStorage.setItem('chat_bg', url);
-                alert("تم تغيير الخلفية بنجاح!");
+            reader.onload = (f) => {
+                localStorage.setItem('chat_bg', f.target.result);
+                applyBg();
+                alert("تم تحديث الخلفية!");
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(e.target.files[0]);
         }
 
         function resetBg() {
-            document.getElementById('chat-area').style.backgroundImage = 'none';
             localStorage.removeItem('chat_bg');
-            alert("تمت العودة للخلفية الافتراضية");
-        }
-
-        function toggleDark(cb) {
-            document.body.style.filter = cb.checked ? 'invert(1) hue-rotate(180deg)' : 'none';
+            applyBg();
+            alert("تم حذف الخلفية المخصصة");
         }
 
         function clearLocal() { localStorage.clear(); location.reload(); }
@@ -195,3 +197,4 @@
     </script>
 </body>
 </html>
+
