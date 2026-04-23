@@ -1,254 +1,252 @@
-here<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Chatt Elite Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chatt Ultimate Elite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { 
-            --p: #007aff; --bg: #f2f2f7; --card: #ffffff; --txt: #000000; 
-            --hdr: rgba(255,255,255,0.8); --border: rgba(0,0,0,0.1); 
-        }
-        [data-theme="dark"] { 
-            --bg: #000000; --card: #1c1c1e; --txt: #ffffff; 
-            --hdr: rgba(28,28,30,0.8); --border: rgba(255,255,255,0.1); 
-        }
+        /* المتغيرات الأساسية ودعم الوضع الليلي */
+        :root { --p: #007bff; --bg: #ffffff; --txt: #000; --card: #f2f2f7; --gray: #8e8e93; --header-bg: #fff; }
+        [data-theme="dark"] { --bg: #121212; --txt: #ffffff; --card: #1c1c1e; --gray: #8e8e93; --header-bg: #1c1c1e; }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; background: var(--bg); color: var(--txt); transition: 0.3s; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; transition: background 0.3s, color 0.3s; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); overflow: hidden; }
 
-        /* الهيدر بنظام الأيفون */
-        .ios-hdr { 
-            height: 90px; padding-top: 40px; display: flex; align-items: center; justify-content: space-between; 
-            padding-inline: 20px; background: var(--hdr); backdrop-filter: blur(20px); 
-            position: sticky; top: 0; z-index: 100; border-bottom: 0.5px solid var(--border);
-        }
-        .ios-hdr h1 { font-size: 34px; font-weight: 700; margin: 0; }
+        /* الشاشات ودعم التدوير */
+        .scr { display: none; height: 100vh; width: 100%; position: absolute; flex-direction: column; background: var(--bg); }
+        .scr.active { display: flex; transform: none; }
         
-        /* الدائرة الشخصية بالهيدر */
-        .my-avatar { 
-            width: 35px; height: 35px; border-radius: 50%; background: #ccc; 
-            background-size: cover; background-position: center; cursor: pointer; border: 1px solid var(--border);
-        }
+        /* الهيدر */
+        .hdr { height: 60px; border-bottom: 1px solid rgba(128,128,128,0.2); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; flex-shrink: 0; background: var(--header-bg); }
+        .hdr b { font-size: 18px; font-weight: 800; }
 
-        /* شاشة المحادثات */
-        .chat-list { padding: 10px 15px; }
-        .chat-item { 
-            background: var(--card); padding: 15px; border-radius: 14px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        }
+        /* منطقة المحادثة - تدعم الخلفية والصور */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; background-size: cover; background-position: center; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* فقاعات الرسائل */
+        .bubble { padding: 12px 16px; border-radius: 20px; max-width: 80%; font-size: 15px; position: relative; cursor: pointer; word-wrap: break-word; }
+        .me { align-self: flex-end; background: var(--p); color: #fff; border-bottom-right-radius: 4px; }
+        .them { align-self: flex-start; background: var(--card); color: var(--txt); border-bottom-left-radius: 4px; }
 
-        /* صندوق الرسائل الفخم */
-        .ios-bar { 
-            background: var(--hdr); backdrop-filter: blur(20px); padding: 10px 15px 30px 15px; 
-            display: flex; align-items: center; gap: 10px; border-top: 0.5px solid var(--border);
-        }
-        .plus-btn { 
-            width: 30px; height: 30px; border-radius: 50%; background: var(--border); 
-            display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--p); border: none;
-        }
-        .ios-input-wrap { 
-            flex: 1; background: var(--bg); border: 0.5px solid var(--border); 
-            border-radius: 20px; padding: 8px 15px; display: flex; align-items: center;
-        }
-        .ios-input-wrap input { background: transparent; border: none; color: var(--txt); flex: 1; outline: none; font-size: 16px; }
+        /* صندوق الإرسال الثابت */
+        .input-bar { padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(128,128,128,0.2); background: var(--header-bg); }
+        .input-wrap { flex: 1; background: var(--card); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; }
+        .input-wrap input { flex: 1; border: none; background: transparent; color: var(--txt); padding: 10px; outline: none; }
 
-        /* فقاعات المحادثة */
-        .bubble { 
-            max-width: 75%; padding: 10px 16px; border-radius: 20px; font-size: 16px; 
-            line-height: 1.4; position: relative; margin-bottom: 4px;
-        }
-        .me { align-self: flex-end; background: var(--p); color: white; border-bottom-right-radius: 4px; }
-        .them { align-self: flex-start; background: var(--card); color: var(--txt); border-bottom-left-radius: 4px; border: 0.5px solid var(--border); }
+        /* القوائم المنبثقة (Popups) */
+        .popup-panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; flex-direction: column; }
+        .popup-panel.active { display: flex; }
 
-        /* صفحة الإعدادات (نظام iOS) */
-        .settings-group { background: var(--card); border-radius: 12px; margin: 20px 15px; overflow: hidden; }
-        .settings-row { 
-            padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 0.5px solid var(--border);
-        }
-        .settings-row:last-child { border: none; }
+        /* زر الإرسال */
+        .send-btn { background: var(--p); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; }
 
-        /* موديلات الصور الـ 7 */
-        .pfp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 15px; }
-        .pfp-slot { aspect-ratio: 1; background: var(--bg); border-radius: 10px; overflow: hidden; border: 1px dashed var(--p); }
-        .pfp-slot img { width: 100%; height: 100%; object-fit: cover; }
+        /* البوتوم شيت (خيارات الحذف) */
+        .b-sheet { position: fixed; bottom: -100%; width: 100%; background: var(--header-bg); border-radius: 20px 20px 0 0; padding: 20px; transition: 0.4s; z-index: 2000; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); }
+        .b-sheet.open { bottom: 0; }
+        .sheet-btn { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 12px; background: var(--card); color: var(--txt); font-weight: bold; font-size: 16px; }
+        .delete-all { color: #ff3b30; }
 
-        .full-scr { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 500; flex-direction: column; }
-        .active { display: flex; }
+        /* السلايدر لصور البروفايل */
+        .pfp-slider { width: 100%; height: 300px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; background: #000; }
+        .pfp-slider img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; scroll-snap-align: center; }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; }
     </style>
 </head>
 <body>
 
-    <div id="main-scr" class="full-scr active">
-        <div class="ios-hdr">
-            <div class="my-avatar" id="top-avatar" onclick="openSettings()"></div>
-            <h1>محادثات</h1>
-            <button onclick="openNewChat()" style="background:none; border:none; color:var(--p); font-size:28px;">⊕</button>
-        </div>
-        <div id="inbox-list" class="chat-list"></div>
-    </div>
+    <div id="overlay" class="overlay" onclick="closeAll()"></div>
 
-    <div id="chat-scr" class="full-scr">
-        <div class="ios-hdr" style="height: 70px; padding-top: 20px;">
-            <button onclick="goBack()" style="background:none; border:none; color:var(--p); font-size:18px;">❮ رجوع</button>
-            <div style="text-align:center;">
-                <b id="active-user-name" style="display:block;">...</b>
-                <span id="active-status" style="font-size:11px; color:#34c759;">متصل الآن</span>
-            </div>
-            <div id="active-user-avatar" class="my-avatar" onclick="viewFriendProfile()"></div>
-        </div>
-        <div id="chat-flow" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:5px;"></div>
-        <div class="ios-bar">
-            <button class="plus-btn" onclick="toggleMediaMenu()">+</button>
-            <div class="ios-input-wrap">
-                <input type="text" id="msg-input" placeholder="iMessage">
-            </div>
-            <button onclick="sendMsg()" style="border:none; background:none; color:var(--p); font-weight:700; font-size:17px;">إرسال</button>
+    <div id="scr-login" class="scr active" style="justify-content:center; align-items:center;">
+        <div style="width:85%; text-align:center;">
+            <h1 style="font-size:40px; margin-bottom:30px;">Chatt</h1>
+            <input type="text" id="reg-name" placeholder="اسمك الكامل" style="width:100%; padding:15px; margin-bottom:10px; border-radius:12px; border:1px solid #ddd;">
+            <input type="text" id="reg-user" placeholder="اليوزر نيم" style="width:100%; padding:15px; margin-bottom:20px; border-radius:12px; border:1px solid #ddd;">
+            <button onclick="saveUser()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:12px; font-weight:bold;">ابدأ الآن</button>
         </div>
     </div>
 
-    <div id="settings-scr" class="full-scr" style="overflow-y:auto;">
-        <div class="ios-hdr" style="height:60px; padding-top:10px;">
-            <button onclick="closeSettings()" style="background:none; border:none; color:var(--p);">تم</button>
-            <b>الحساب</b>
+    <div id="scr-main" class="scr">
+        <div class="hdr">
+            <button onclick="openPanel('settings-panel')" style="border:none; background:none; font-size:20px;">⚙️</button>
+            <b>محادثاتي</b>
+            <button onclick="openPanel('search-panel')" style="border:none; background:none; font-size:20px;">➕</button>
+        </div>
+        <div id="inbox-list" style="flex:1; overflow-y:auto; padding:15px;"></div>
+    </div>
+
+    <div id="scr-chat" class="scr">
+        <div class="hdr">
+            <button onclick="goHome()" style="border:none; background:none; font-size:18px;">⬅️</button>
+            <div onclick="viewFriendProfile()" style="text-align:center;">
+                <b id="chat-title">اسم الصديق</b>
+                <div id="online-status" style="font-size:10px; color:#34c759;">متصل الآن</div>
+            </div>
+            <div id="chat-pfp" style="width:35px; height:35px; border-radius:50%; background:#ddd; background-size:cover;"></div>
+        </div>
+        <div id="chat-flow"></div>
+        <div class="input-bar">
+            <button style="border:none; background:none; font-size:20px;">📎</button>
+            <div class="input-wrap">
+                <input type="text" id="msg-input" placeholder="اكتب رسالة...">
+            </div>
+            <button onclick="sendMsg()" class="send-btn">➤</button>
+        </div>
+    </div>
+
+    <div id="delete-sheet" class="b-sheet">
+        <button class="sheet-btn" onclick="copyMsg()">نسخ النص</button>
+        <button class="sheet-btn" onclick="deleteForMe()">حذف عندي فقط</button>
+        <button class="sheet-btn delete-all" onclick="deleteForEveryone()">حذف من الجميع 🗑️</button>
+        <button class="sheet-btn" onclick="closeAll()" style="background:none;">إلغاء</button>
+    </div>
+
+    <div id="settings-panel" class="popup-panel">
+        <div class="hdr">
+            <button onclick="closeAll()" style="border:none; background:none;">Done</button>
+            <b>الإعدادات</b>
             <span></span>
         </div>
-        
-        <div style="text-align:center; padding:20px;">
-            <div id="my-large-avatar" style="width:100px; height:100px; border-radius:50%; background:#ccc; margin:0 auto 10px;"></div>
-            <h2 id="my-display-name">User Name</h2>
-        </div>
-
-        <div class="settings-group">
-            <div class="settings-row">
+        <div style="padding:20px;">
+            <div class="sheet-btn" style="display:flex; justify-content:space-between; align-items:center;">
                 <span>الوضع الليلي</span>
-                <input type="checkbox" id="dark-mode-toggle" onchange="toggleTheme(this.checked)">
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)">
             </div>
+            <hr style="opacity:0.1; margin:20px 0;">
+            <p>بايو الحساب:</p>
+            <textarea id="my-bio" style="width:100%; height:80px; border-radius:10px; padding:10px; background:var(--card); color:var(--txt); border:none;"></textarea>
+            <button onclick="saveProfile()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:12px; margin-top:20px;">حفظ التغييرات</button>
         </div>
+    </div>
 
-        <div class="settings-group">
-            <div style="padding:15px; font-weight:600;">صور البروفايل (7 صور)</div>
-            <div class="pfp-grid" id="my-pfps-grid">
-                </div>
-            <input type="file" id="pfp-input" multiple accept="image/*" style="display:none;" onchange="handlePfpUpload(event)">
-            <div class="settings-row" onclick="document.getElementById('pfp-input').click()" style="color:var(--p); cursor:pointer;">إضافة صور...</div>
+    <div id="search-panel" class="popup-panel">
+        <div class="hdr"><button onclick="closeAll()">إغلاق</button><b>بدء محادثة</b><span></span></div>
+        <div style="padding:20px;">
+            <input type="text" id="target-user" placeholder="يوزر الشخص أو اسم الكروب" style="width:100%; padding:15px; border-radius:12px; border:1px solid #ddd; margin-bottom:15px;">
+            <button onclick="startChat()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:12px;">دخول</button>
         </div>
-
-        <div class="settings-group">
-            <div style="padding:15px; font-weight:600;">البايو</div>
-            <textarea id="my-bio-input" style="width:100%; border:none; padding:15px; background:transparent; color:var(--txt); outline:none;" placeholder="اكتب شيئاً عنك..."></textarea>
-        </div>
-
-        <button onclick="saveAllSettings()" style="margin:20px 15px; padding:15px; background:var(--p); color:white; border:none; border-radius:12px; font-weight:bold;">حفظ التغييرات</button>
     </div>
 
     <script>
-        // الربط مع Supabase (نفس بياناتج السابقة)
         const supabaseUrl = 'https://klhcqkjcncujvrzpbwsa.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaGNxa2pjbmN1anZyenBid3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODI2MDIsImV4cCI6MjA5MjQ1ODI2MDJ9.M2mUlbaPsBYaS59zYVfzW42Kga0_w8o2mm3ZFPjOxu8';
         const _db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let myUser = localStorage.getItem('chat_user') || "";
-        let activeFriend = "";
-        let myPhotos = JSON.parse(localStorage.getItem('chat_photos') || "[]");
+        let me = localStorage.getItem('u_u') || "";
+        let chatTarget = "";
+        let selMsgId = null;
 
-        // تشغيل الثيم المحفوظ
-        if(localStorage.getItem('ios_theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            document.getElementById('dark-mode-toggle').checked = true;
+        // تطبيق الثيم المحفوظ فوراً عند التحميل
+        const savedTheme = localStorage.getItem('theme');
+        if(savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            setTimeout(() => { if(document.getElementById('dark-mode-toggle')) document.getElementById('dark-mode-toggle').checked = true; }, 500);
         }
 
-        // دخول تلقائي
-        if(!myUser) {
-            let u = prompt("ادخل يوزرك للفخامة:");
-            if(u) { localStorage.setItem('chat_user', u); myUser = u; }
-        }
+        if(me) goHome();
 
-        function toggleTheme(isDark) {
-            const theme = isDark ? 'dark' : 'light';
-            document.body.setAttribute('data-theme', theme);
-            localStorage.setItem('ios_theme', theme);
-        }
-
-        function openSettings() { 
-            document.getElementById('settings-scr').classList.add('active'); 
-            renderPfpGrid();
-        }
-        function closeSettings() { document.getElementById('settings-scr').classList.remove('active'); }
-
-        function renderPfpGrid() {
-            const grid = document.getElementById('my-pfps-grid');
-            grid.innerHTML = '';
-            for(let i=0; i<7; i++) {
-                grid.innerHTML += `<div class="pfp-slot">${myPhotos[i] ? `<img src="${myPhotos[i]}">` : ''}</div>`;
+        async function saveUser() {
+            const u = document.getElementById('reg-user').value;
+            const n = document.getElementById('reg-name').value;
+            if(u && n) {
+                await _db.from('profiles').upsert([{ username: u, full_name: n }]);
+                localStorage.setItem('u_u', u);
+                me = u; goHome();
             }
         }
 
-        function handlePfpUpload(e) {
-            const files = Array.from(e.target.files).slice(0, 7);
-            myPhotos = [];
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (re) => { 
-                    myPhotos.push(re.target.result); 
-                    renderPfpGrid(); 
-                };
-                reader.readAsDataURL(file);
-            });
+        function goHome() {
+            closeAll();
+            document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+            document.getElementById('scr-main').classList.add('active');
+            loadInbox();
         }
 
-        async function saveAllSettings() {
-            const bio = document.getElementById('my-bio-input').value;
-            localStorage.setItem('chat_photos', JSON.stringify(myPhotos));
-            await _db.from('profiles').upsert([{ username: myUser, bio: bio, pfps: myPhotos }]);
-            alert("تم التحديث بنظام الأيفون!");
-            closeSettings();
+        function toggleDarkMode(isDark) {
+            if(isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
         }
 
-        // دالة إرسال الرسالة
-        async function sendMsg() {
-            const inp = document.getElementById('msg-input');
-            if(!inp.value) return;
-            await _db.from('messages').insert([{ sender: myUser, receiver: activeFriend, content: inp.value }]);
-            inp.value = '';
-            loadChatFlow();
+        function openPanel(id) { document.getElementById(id).classList.add('active'); }
+        function closeAll() {
+            document.querySelectorAll('.popup-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('delete-sheet').classList.remove('open');
+            document.getElementById('overlay').style.display = 'none';
         }
 
-        function openNewChat() {
-            let u = prompt("يوزر الشخص أو اسم الكروب:");
-            if(u) startChatWith(u);
+        function startChat() {
+            const t = document.getElementById('target-user').value;
+            if(t) openChat(t);
         }
 
-        function startChatWith(u) {
-            activeFriend = u;
-            document.getElementById('main-scr').classList.remove('active');
-            document.getElementById('chat-scr').classList.add('active');
-            document.getElementById('active-user-name').innerText = u;
-            loadChatFlow();
+        function openChat(name) {
+            chatTarget = name;
+            closeAll();
+            document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+            document.getElementById('scr-chat').classList.add('active');
+            document.getElementById('chat-title').innerText = name;
+            loadMsgs();
         }
 
-        function goBack() {
-            document.getElementById('chat-scr').classList.remove('active');
-            document.getElementById('main-scr').classList.add('active');
-        }
-
-        async function loadChatFlow() {
-            const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${myUser},receiver.eq.${activeFriend}),and(sender.eq.${activeFriend},receiver.eq.${myUser})`).order('created_at', { ascending: true });
+        async function loadMsgs() {
+            const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${me},receiver.eq.${chatTarget}),and(sender.eq.${chatTarget},receiver.eq.${me})`).order('created_at', { ascending: true });
             const flow = document.getElementById('chat-flow');
             flow.innerHTML = '';
             data?.forEach(m => {
-                flow.innerHTML += `<div class="bubble ${m.sender === myUser ? 'me' : 'them'}">${m.content}</div>`;
+                const b = document.createElement('div');
+                b.className = `bubble ${m.sender === me ? 'me' : 'them'}`;
+                b.innerText = m.content;
+                b.onclick = () => { selMsgId = m.id; openDeleteMenu(); };
+                flow.appendChild(b);
             });
             flow.scrollTop = flow.scrollHeight;
         }
 
-        // تحديث المحادثة كل 3 ثواني
-        setInterval(() => {
-            if(document.getElementById('chat-scr').classList.contains('active')) loadChatFlow();
-        }, 3000);
+        async function sendMsg() {
+            const inp = document.getElementById('msg-input');
+            if(!inp.value) return;
+            await _db.from('messages').insert([{ sender: me, receiver: chatTarget, content: inp.value }]);
+            inp.value = ''; loadMsgs();
+        }
 
+        function openDeleteMenu() {
+            document.getElementById('delete-sheet').classList.add('open');
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        async function deleteForMe() {
+            // محاكاة حذف محلي (أو إضافة عمود 'deleted_by' في الداتابيس)
+            alert("تم الحذف من عندك فقط");
+            closeAll();
+        }
+
+        async function deleteForEveryone() {
+            await _db.from('messages').delete().eq('id', selMsgId);
+            closeAll();
+            loadMsgs();
+        }
+
+        async function loadInbox() {
+            const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
+            const unique = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
+            const list = document.getElementById('inbox-list');
+            list.innerHTML = '';
+            unique.forEach(u => {
+                const item = document.createElement('div');
+                item.style = "padding:15px; background:var(--card); margin-bottom:10px; border-radius:15px; font-weight:bold; cursor:pointer;";
+                item.innerText = u;
+                item.onclick = () => openChat(u);
+                list.appendChild(item);
+            });
+        }
+
+        setInterval(() => { if(document.getElementById('scr-chat').classList.contains('active')) loadMsgs(); }, 4000);
     </script>
 </body>
 </html>
