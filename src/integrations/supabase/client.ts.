@@ -1,0 +1,7 @@
+import { createClient } from '@supabase/supabase-client';
+
+// استبدلي الروابط باللي عندكِ إذا كانت مختلفة
+const supabaseUrl = 'https://klhcqkjcncujvrzpbwsa.supabase.co';
+const supabaseAnonKey = 'الزقي_هنا_مفتاح_الـ_anon_اللي_نسختيه';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
