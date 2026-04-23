@@ -3,115 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatt Ultimate Edition</title>
+    <title>Chatt Elite V12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --p: #007aff; --bg: #ffffff; --txt: #000000; --card: #f2f2f7; --gray: #8e8e93; }
-        .dark { --bg: #000000; --txt: #ffffff; --card: #1c1c1e; }
-        
+        :root { --p: #007aff; --bg: #ffffff; --txt: #000; --card: #f2f2f7; --hdr: #ffffff; }
+        [data-theme="dark"] { --bg: #000000; --txt: #ffffff; --card: #1c1c1e; --hdr: #121212; }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--txt); overflow: hidden; }
 
-        /* شاشات النظام */
-        .screen { display: none; height: 100vh; flex-direction: column; width: 100%; position: absolute; background: var(--bg); }
+        /* الشاشات */
+        .scr { display: none; height: 100%; width: 100%; flex-direction: column; background: var(--bg); position: absolute; }
         .active { display: flex; }
 
-        /* واجهة الدخول الفخمة */
-        .login-scr { background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); justify-content: center; align-items: center; }
-        .login-box { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 40px; width: 90%; max-width: 400px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        .login-box h1 { font-size: 40px; margin: 0 0 30px; color: #fff; letter-spacing: -1px; }
-        .login-box input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 15px; border: none; background: rgba(255,255,255,0.1); color: #fff; outline: none; }
-        .login-box button { width: 100%; padding: 15px; border-radius: 15px; border: none; background: #fff; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; }
+        /* الهيدر الفخم */
+        .hdr { height: 60px; border-bottom: 1px solid rgba(128,128,128,0.2); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; flex-shrink: 0; background: var(--hdr); }
+        .hdr b { font-size: 19px; font-weight: 800; color: var(--txt); }
 
-        /* هيدر احترافي بدون إيموجي */
-        .hdr { height: 65px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; flex-shrink: 0; }
-        .hdr b { font-size: 20px; font-weight: 800; color: #000; }
-        .dark .hdr b { color: #fff; }
-        .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; fill: var(--txt); }
-
-        /* قائمة المحادثات */
-        .list-area { flex: 1; overflow-y: auto; padding: 10px; }
-        .card { background: var(--card); padding: 15px; border-radius: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; position: relative; }
-        .pfp-multi { width: 55px; height: 55px; border-radius: 18px; background: #ddd; overflow: hidden; position: relative; }
-
-        /* منطقة الدردشة */
-        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
-        .bubble { padding: 12px 16px; border-radius: 22px; max-width: 80%; font-size: 15px; position: relative; line-height: 1.5; }
+        /* منطقة الدردشة - ثابتة بالوضع الأفقي */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-size: cover; }
+        .bubble { padding: 10px 14px; border-radius: 18px; max-width: 75%; font-size: 15px; position: relative; cursor: pointer; }
         .me { align-self: flex-end; background: var(--p); color: #fff; border-bottom-right-radius: 4px; }
         .them { align-self: flex-start; background: var(--card); color: var(--txt); border-bottom-left-radius: 4px; }
 
-        /* صندوق الإرسال الثابت والمطور */
-        .bar { padding: 15px; display: flex; align-items: center; gap: 12px; background: var(--bg); border-top: 1px solid rgba(0,0,0,0.05); flex-shrink: 0; }
-        .input-wrap { flex: 1; background: var(--card); border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; }
-        .input-wrap input { flex: 1; border: none; background: transparent; padding: 10px; outline: none; color: var(--txt); font-size: 16px; }
+        /* صندوق الإرسال الثابت 100% */
+        .bar { height: 65px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid rgba(128,128,128,0.2); background: var(--hdr); flex-shrink: 0; }
+        .input-wrap { flex: 1; background: var(--card); border-radius: 20px; padding: 5px 15px; display: flex; align-items: center; }
+        .input-wrap input { flex: 1; border: none; background: transparent; color: var(--txt); padding: 8px; outline: none; font-size: 16px; }
 
-        /* القائمة السفلية للخيارات */
-        .sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: var(--bg); border-radius: 30px 30px 0 0; transition: 0.3s; z-index: 200; padding: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+        /* واجهات البروفايل والإعدادات */
+        .panel { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; flex-direction: column; }
+        .panel.active { display: flex; }
+
+        /* سلايدر الصور الـ 7 */
+        .slider { width: 100%; height: 350px; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; background: #000; }
+        .slider img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; scroll-snap-align: center; }
+
+        /* أزرار الحذف والخيارات */
+        .sheet { position: fixed; bottom: -100%; width: 100%; background: var(--hdr); padding: 20px; border-radius: 25px 25px 0 0; transition: 0.3s; z-index: 2000; }
         .sheet.open { bottom: 0; }
-        .sheet-item { padding: 18px; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center; font-size: 17px; font-weight: 600; cursor: pointer; }
-        .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); z-index:150; }
+        .btn-opt { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 12px; background: var(--card); color: var(--txt); font-weight: 600; }
 
-        /* المرفقات والكروبات */
-        .attach-menu { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0; }
-        .attach-btn { min-width: 80px; text-align: center; font-size: 12px; }
-        .admin-badge { font-size: 10px; background: var(--p); color: #fff; padding: 2px 6px; border-radius: 5px; margin-right: 5px; }
+        .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1500; }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
-    <div id="overlay" class="overlay" onclick="closeAll()"></div>
+    <div id="overlay" class="overlay" onclick="closePopups()"></div>
 
     <div id="msg-sheet" class="sheet">
-        <div class="sheet-item" onclick="startReply()">رد</div>
-        <div class="sheet-item" onclick="startEdit()">تعديل</div>
-        <div class="sheet-item" onclick="togglePin()">تثبيت</div>
-        <div class="sheet-item" style="color:red;" onclick="deleteForAll()">حذف من الجميع</div>
-        <div class="sheet-item" style="color:red;" onclick="deleteForMe()">حذف مني</div>
-        <div class="sheet-item" onclick="closeAll()">إلغاء</div>
+        <button class="btn-opt" onclick="copyMsg()">نسخ الرسالة</button>
+        <button class="btn-opt" onclick="delForMe()">حذف مني</button>
+        <button class="btn-opt" style="color:red;" onclick="delForAll()">حذف من الجميع 🗑️</button>
+        <button class="btn-opt" onclick="closePopups()">إلغاء</button>
     </div>
 
-    <div id="scr-login" class="screen login-scr active">
-        <div class="login-box">
-            <h1>CHATT</h1>
-            <input type="text" id="reg-name" placeholder="الاسم الكامل">
-            <input type="text" id="reg-user" placeholder="اسم المستخدم">
-            <button onclick="auth()">دخول</button>
+    <div id="scr-login" class="scr active" style="justify-content:center; align-items:center;">
+        <div style="width:80%; text-align:center;">
+            <h1 style="font-size:45px; margin-bottom:40px;">Chatt</h1>
+            <input type="text" id="reg-name" placeholder="الاسم الكامل" style="width:100%; padding:15px; margin-bottom:15px; border-radius:15px; border:1px solid #ddd;">
+            <input type="text" id="reg-user" placeholder="اسم المستخدم" style="width:100%; padding:15px; margin-bottom:25px; border-radius:15px; border:1px solid #ddd;">
+            <button onclick="login()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:15px; font-weight:bold;">دخول</button>
         </div>
     </div>
 
-    <div id="scr-main" class="screen">
+    <div id="scr-main" class="scr">
         <div class="hdr">
-            <div class="icon-btn" onclick="openSettings()">
-                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7-3.77a.71.71 0 0 0 .07-.31.71.71 0 0 0-.07-.31l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a.73.73 0 0 0-.54.06l-2.12-1.22a.5.5 0 0 0-.41-.12H10.5a.5.5 0 0 0-.41.12L7.97 6.17a.73.73 0 0 0-.54-.06l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65a.71.71 0 0 0-.07.31c0 .11.03.22.07.31L2.43 13.43a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1a.73.73 0 0 0 .54-.06l2.12 1.22c.11.06.22.1.33.11l.1.01h2.15c.12-.01.23-.05.33-.11l2.12-1.22a.73.73 0 0 0 .54.06l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65z"/></svg>
-            </div>
+            <button onclick="showPanel('settings-panel')" style="background:none; border:none; font-size:22px;">⚙️</button>
             <b>محادثاتي</b>
-            <div class="icon-btn" onclick="startNew()">
-                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            </div>
+            <button onclick="showPanel('new-chat-panel')" style="background:none; border:none; font-size:22px;">➕</button>
         </div>
-        <div id="inbox-list" class="list-area"></div>
+        <div id="inbox" style="flex:1; overflow-y:auto; padding:10px;"></div>
     </div>
 
-    <div id="scr-chat" class="screen">
+    <div id="scr-chat" class="scr">
         <div class="hdr">
-            <div class="icon-btn" onclick="goHome()">
-                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <button onclick="goHome()" style="background:none; border:none; font-size:20px;">🔙</button>
+            <div onclick="showFriendProfile()" style="text-align:center; cursor:pointer;">
+                <b id="chat-user-name">...</b>
+                <div style="font-size:10px; color:#34c759;">متصل الآن</div>
             </div>
-            <div style="text-align:center">
-                <b id="chat-title" style="color:black">...</b>
-                <div id="group-status" style="font-size:10px; color:var(--gray)"></div>
-            </div>
-            <div id="chat-pfp" class="pfp-multi" style="width:38px; height:38px"></div>
+            <div id="chat-avatar" style="width:35px; height:35px; border-radius:50%; background:#ccc;"></div>
         </div>
         <div id="chat-flow"></div>
         <div class="bar">
-            <div class="icon-btn" onclick="openAttach()">
-                <svg width="24" height="24" viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5V5c0-2.76-2.24-5-5-5s-5 2.24-5 5v12.5c0 3.87 3.13 7 7 7s7-3.13 7-7V6h-1.5z"/></svg>
-            </div>
+            <button onclick="showPanel('media-panel')" style="background:none; border:none; font-size:22px;">📎</button>
             <div class="input-wrap">
-                <input type="text" id="msg-input" placeholder="اكتب رسالة...">
+                <input type="text" id="msg-in" placeholder="اكتب رسالة...">
             </div>
-            <button onclick="send()" style="border:none; background:var(--p); color:#fff; padding:10px 18px; border-radius:20px; font-weight:bold;">إرسال</button>
+            <button onclick="send()" style="background:var(--p); color:#fff; border:none; width:40px; height:40px; border-radius:50%; font-weight:bold;">➤</button>
+        </div>
+    </div>
+
+    <div id="settings-panel" class="panel">
+        <div class="hdr"><button onclick="closePopups()">إغلاق</button><b>الإعدادات</b><span></span></div>
+        <div style="padding:20px;">
+            <div class="btn-opt" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>الوضع الليلي (Dark Mode)</span>
+                <input type="checkbox" id="dark-toggle" onchange="setTheme(this.checked)">
+            </div>
+            <p>صور البروفايل (7 صور):</p>
+            <input type="file" id="pfp-up" multiple accept="image/*" onchange="handlePfps(event)">
+            <textarea id="my-bio" placeholder="اكتب البايو هنا..." style="width:100%; height:100px; margin-top:15px; border-radius:10px; padding:10px; background:var(--card); color:var(--txt); border:none;"></textarea>
+            <button onclick="saveProfile()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:15px; margin-top:20px;">حفظ كل شيء</button>
+        </div>
+    </div>
+
+    <div id="profile-panel" class="panel">
+        <div class="hdr"><button onclick="closePopups()">رجوع</button><b>البروفايل</b><span></span></div>
+        <div class="slider" id="pfp-slider-view"></div>
+        <div style="padding:20px; text-align:center;">
+            <h2 id="prof-name">Carlos Oliveira</h2>
+            <p id="prof-bio" style="color:var(--gray);">هذا المستخدم لم يكتب بايو بعد.</p>
+        </div>
+    </div>
+
+    <div id="new-chat-panel" class="panel">
+        <div class="hdr"><button onclick="closePopups()">إلغاء</button><b>بدء محادثة</b><span></span></div>
+        <div style="padding:20px;">
+            <input type="text" id="target-id" placeholder="يوزر الشخص أو اسم الكروب" style="width:100%; padding:15px; border-radius:15px; border:1px solid #ddd; margin-bottom:15px;">
+            <button onclick="startChat()" style="width:100%; padding:15px; background:var(--p); color:#fff; border:none; border-radius:15px;">بدء</button>
         </div>
     </div>
 
@@ -120,88 +131,124 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaGNxa2pjbmN1anZyenBid3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODI2MDIsImV4cCI6MjA5MjQ1ODYwMn0.M2mUlbaPsBYaS59zYVfzW42Kga0_w8o2mm3ZFPjOxu8';
         const _db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let me = localStorage.getItem('u_key') || "";
-        let chatTarget = "";
-        let isGroup = false;
-        let selectedMsg = null;
+        let me = localStorage.getItem('u_u') || "";
+        let friend = "";
+        let selMsg = null;
+        let myPfps = [];
+
+        // تشغيل الثيم المحفوظ
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            setTimeout(() => document.getElementById('dark-toggle').checked = true, 500);
+        }
 
         if(me) goHome();
 
-        async function auth() {
+        function login() {
             const u = document.getElementById('reg-user').value;
             const n = document.getElementById('reg-name').value;
-            if(u && n) {
-                await _db.from('profiles').upsert([{ username: u, full_name: n }]);
-                localStorage.setItem('u_key', u);
-                me = u; goHome();
-            }
+            if(u) { localStorage.setItem('u_u', u); me = u; goHome(); }
+        }
+
+        function setTheme(isDark) {
+            const theme = isDark ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
         }
 
         function goHome() {
-            closeAll();
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            closePopups();
+            document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
             document.getElementById('scr-main').classList.add('active');
             loadInbox();
         }
 
-        function startNew() {
-            const target = prompt("أدخل يوزر الشخص أو اسم المجموعة:");
-            if(target) { chatTarget = target; openChat(target); }
+        function showPanel(id) { document.getElementById(id).classList.add('active'); }
+        function closePopups() {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('msg-sheet').classList.remove('open');
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function startChat() {
+            const id = document.getElementById('target-id').value;
+            if(id) openChat(id);
         }
 
         function openChat(name) {
-            chatTarget = name;
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            friend = name;
+            closePopups();
+            document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
             document.getElementById('scr-chat').classList.add('active');
-            document.getElementById('chat-title').innerText = name;
+            document.getElementById('chat-user-name').innerText = name;
             loadMsgs();
         }
 
-        async function loadInbox() {
-            const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
-            const users = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
-            const list = document.getElementById('inbox-list');
-            list.innerHTML = users.length ? '' : '<p style="text-align:center; color:gray; margin-top:50px;">لا توجد محادثات بعد</p>';
-            users.forEach(u => {
-                const d = document.createElement('div');
-                d.className = 'card';
-                d.innerHTML = `<div class="pfp-multi"></div><b>${u}</b>`;
-                d.onclick = () => openChat(u);
-                list.appendChild(d);
-            });
-        }
-
         async function loadMsgs() {
-            const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${me},receiver.eq.${chatTarget}),and(sender.eq.${chatTarget},receiver.eq.${me})`).order('created_at', { ascending: true });
+            const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${me},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${me})`).order('created_at', { ascending: true });
             const flow = document.getElementById('chat-flow');
             flow.innerHTML = '';
             data?.forEach(m => {
-                const b = document.createElement('div');
-                b.className = `bubble ${m.sender === me ? 'me' : 'them'}`;
-                b.innerText = m.content;
-                b.onclick = (e) => { selectedMsg = m.id; openSheet(); };
-                flow.appendChild(b);
+                const d = document.createElement('div');
+                d.className = `bubble ${m.sender === me ? 'me' : 'them'}`;
+                d.innerText = m.content;
+                d.onclick = () => { selMsg = m.id; document.getElementById('msg-sheet').classList.add('open'); document.getElementById('overlay').style.display = 'block'; };
+                flow.appendChild(d);
             });
             flow.scrollTop = flow.scrollHeight;
         }
 
         async function send() {
-            const inp = document.getElementById('msg-input');
-            if(!inp.value) return;
-            await _db.from('messages').insert([{ content: inp.value, sender: me, receiver: chatTarget }]);
+            const inp = document.getElementById('msg-in'); if(!inp.value) return;
+            await _db.from('messages').insert([{ sender: me, receiver: friend, content: inp.value }]);
             inp.value = ''; loadMsgs();
         }
 
-        function openSheet() { document.getElementById('msg-sheet').classList.add('open'); document.getElementById('overlay').style.display = 'block'; }
-        function closeAll() { document.getElementById('msg-sheet').classList.remove('open'); document.getElementById('overlay').style.display = 'none'; }
+        async function delForAll() { await _db.from('messages').delete().eq('id', selMsg); closePopups(); loadMsgs(); }
 
-        async function deleteForAll() {
-            await _db.from('messages').delete().eq('id', selectedMsg);
-            closeAll(); loadMsgs();
+        async function loadInbox() {
+            const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
+            const users = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
+            const list = document.getElementById('inbox'); list.innerHTML = '';
+            users.forEach(u => {
+                const item = document.createElement('div');
+                item.style = "padding:15px; background:var(--card); border-radius:15px; margin-bottom:10px; font-weight:bold; cursor:pointer;";
+                item.innerText = u;
+                item.onclick = () => openChat(u);
+                list.appendChild(item);
+            });
         }
 
-        function openSettings() { alert("صفحة الإعدادات: يمكنك هنا رفع 7 صور وتغيير الخلفية"); }
-        function openAttach() { alert("مرفقات: يمكنك إرسال صور، فيديو، ملفات، أو روابط"); }
+        // التعامل مع الـ 7 صور
+        function handlePfps(e) {
+            const files = Array.from(e.target.files).slice(0, 7);
+            myPfps = [];
+            files.forEach(f => {
+                const reader = new FileReader();
+                reader.onload = (re) => myPfps.push(re.target.result);
+                reader.readAsDataURL(f);
+            });
+        }
+
+        async function saveProfile() {
+            const bio = document.getElementById('my-bio').value;
+            await _db.from('profiles').upsert([{ username: me, bio: bio, pfps: myPfps }]);
+            alert("تم حفظ البروفايل!"); closePopups();
+        }
+
+        async function showFriendProfile() {
+            const { data } = await _db.from('profiles').select('*').eq('username', friend).single();
+            const slider = document.getElementById('pfp-slider-view');
+            slider.innerHTML = '';
+            if(data?.pfps) {
+                data.pfps.forEach(img => slider.innerHTML += `<img src="${img}">`);
+            } else {
+                slider.innerHTML = `<div style="color:white; padding:100px;">لا توجد صور</div>`;
+            }
+            document.getElementById('prof-name').innerText = friend;
+            document.getElementById('prof-bio').innerText = data?.bio || "لا يوجد بايو.";
+            showPanel('profile-panel');
+        }
 
         setInterval(() => { if(document.getElementById('scr-chat').classList.contains('active')) loadMsgs(); }, 4000);
     </script>
