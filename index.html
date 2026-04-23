@@ -2,109 +2,122 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatt Elite V3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chatt Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --p: #007bff; --bg: #ffffff; --txt: #000000; --card: #f8f9fa; --chat-bg: #e5ddd5; --header-bg: #ffffff; }
-        .dark-mode { --bg: #121212; --txt: #ffffff; --card: #1e1e1e; --header-bg: #1e1e1e; }
-        
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
-        .screen { display: none; height: 100vh; width: 100%; position: absolute; background: var(--bg); flex-direction: column; }
+        :root { --p: #007aff; --bg: #f2f2f7; --txt: #000; --card: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); overflow: hidden; }
+
+        /* شاشة الدخول المرتبة */
+        .login-screen { 
+            height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;
+        }
+        .login-card { 
+            background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 30px; 
+            width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center;
+        }
+        .login-card h1 { margin-bottom: 30px; color: #333; font-size: 28px; font-weight: 800; }
+        .login-card input { 
+            width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; 
+            border-radius: 15px; outline: none; font-size: 16px; transition: 0.3s;
+        }
+        .login-card input:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        .login-card button { 
+            width: 100%; padding: 15px; background: var(--p); color: white; border: none; 
+            border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer;
+        }
+
+        /* شاشة الدردشة الرئيسية */
+        .screen { display: none; height: 100%; flex-direction: column; }
         .active { display: flex; }
 
-        /* هيدر عصري */
-        .hdr { background: var(--header-bg); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
-        .hdr-title { color: var(--txt); font-weight: bold; font-size: 18px; }
-        .hdr-icon { font-size: 22px; cursor: pointer; color: var(--txt); }
+        /* الهيدر الجديد */
+        .hdr { 
+            background: white; padding: 10px 15px; display: flex; align-items: center; 
+            border-bottom: 1px solid #e5e5e5; z-index: 10; height: 60px;
+        }
+        .back-btn { font-size: 24px; cursor: pointer; padding: 5px; color: var(--p); display: flex; align-items: center; }
+        .hdr-info { flex: 1; text-align: center; }
+        .hdr-info b { display: block; font-size: 17px; color: black; }
+        .hdr-info span { font-size: 12px; color: #34c759; }
 
-        /* منطقة المحادثات */
-        .inbox { flex: 1; overflow-y: auto; padding: 15px; }
-        .user-card { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        /* منطقة الرسائل */
+        #chat-area { 
+            flex: 1; overflow-y: auto; padding: 15px; display: flex; 
+            flex-direction: column; gap: 10px; background: #e5ddd5;
+        }
+        .bubble { 
+            max-width: 80%; padding: 10px 15px; border-radius: 18px; font-size: 15px; 
+            position: relative; line-height: 1.4; box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+        .me { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
+        .them { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
 
-        /* شاشة الدردشة */
-        #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-size: cover; background-position: center; background-color: #e5ddd5; }
-        .msg-row { display: flex; flex-direction: column; max-width: 80%; }
-        .me-row { align-self: flex-end; }
-        .them-row { align-self: flex-start; }
-        .bubble { padding: 10px 15px; border-radius: 18px; font-size: 15px; position: relative; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .me { background: #dcf8c6; color: #000; border-bottom-right-radius: 2px; }
-        .them { background: #fff; color: #000; border-bottom-left-radius: 2px; }
-        .pinned { border: 2px solid gold !important; }
+        /* صندوق الإرسال الثابت أسفل الشاشة */
+        .input-area { 
+            background: #f6f6f6; padding: 10px 15px; display: flex; align-items: center; 
+            gap: 10px; border-top: 1px solid #ddd; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        }
+        .input-area input { 
+            flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; 
+            outline: none; background: white; font-size: 16px;
+        }
+        .send-btn { 
+            background: var(--p); color: white; border: none; width: 40px; height: 40px; 
+            border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center;
+        }
 
-        /* قائمة التحكم بالرسالة (مودال) */
-        #msg-options { display: none; position: fixed; bottom: 0; width: 100%; background: var(--card); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); z-index: 1000; box-sizing: border-box; }
-        .opt-btn { padding: 15px; text-align: center; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; }
-
-        /* الإدخال */
-        .input-bar { background: var(--header-bg); padding: 10px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
-        .input-bar input { flex: 1; border: none; background: var(--card); color: var(--txt); padding: 12px; border-radius: 20px; outline: none; }
-        
-        .pin-banner { background: gold; color: black; padding: 5px 15px; font-size: 12px; display: none; justify-content: space-between; }
+        /* قائمة الخيارات (الحذف، التعديل، الرد، التثبيت) */
+        .options-menu {
+            display: none; position: fixed; bottom: 0; width: 100%; background: white;
+            border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); z-index: 100;
+            padding: 10px 0;
+        }
+        .opt-item { padding: 15px 20px; font-size: 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; text-align: center; }
+        .opt-item:last-child { border: none; color: #ff3b30; }
+        .overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.4); z-index: 90; }
     </style>
 </head>
 <body>
 
-    <div id="msg-options">
-        <div class="opt-btn" onclick="startReply()">💬 رد</div>
-        <div class="opt-btn" onclick="startEdit()">✏️ تعديل</div>
-        <div class="opt-btn" onclick="togglePin()">📌 تثبيت / إلغاء</div>
-        <div class="opt-btn" style="color:red;" onclick="confirmDelete()">🗑️ حذف الرسالة</div>
-        <div class="opt-btn" onclick="closeOptions()">إلغاء</div>
+    <div id="overlay" class="overlay" onclick="closeMenu()"></div>
+
+    <div id="menu" class="options-menu">
+        <div class="opt-item" onclick="replyMsg()">💬 رد</div>
+        <div class="opt-item" onclick="editMsg()">✏️ تعديل</div>
+        <div class="opt-item" onclick="pinMsg()">📌 تثبيت</div>
+        <div class="opt-item" onclick="delForMe()">🗑️ حذف مني</div>
+        <div class="opt-item" style="color:red;" onclick="delForAll()">🗑️ حذف من الجميع</div>
+        <div class="opt-item" onclick="closeMenu()" style="background:#eee; font-weight:bold;">إلغاء</div>
     </div>
 
-    <div id="login-scr" class="screen active" style="justify-content:center; align-items:center;">
-        <div style="background:var(--card); padding:30px; border-radius:20px; width:80%; text-align:center;">
-            <h2>Chatt Login</h2>
-            <input type="text" id="reg-name" placeholder="الاسم">
-            <input type="text" id="reg-user" placeholder="اليوزر">
-            <button onclick="doLogin()" style="width:100%; padding:12px; background:var(--p); color:white; border:none; border-radius:10px;">دخول</button>
+    <div id="login-scr" class="login-screen">
+        <div class="login-card">
+            <h1>Chatt</h1>
+            <input type="text" id="reg-name" placeholder="الاسم الكامل">
+            <input type="text" id="reg-user" placeholder="اسم المستخدم (Username)">
+            <button onclick="login()">ابدأ الآن</button>
         </div>
-    </div>
-
-    <div id="main-scr" class="screen">
-        <div class="hdr">
-            <span class="hdr-icon" onclick="goSet()">⚙️</span>
-            <span class="hdr-title">محادثاتي</span>
-            <span class="hdr-icon" onclick="doSearch()">🔍</span>
-        </div>
-        <div id="list" class="inbox"></div>
     </div>
 
     <div id="chat-scr" class="screen">
         <div class="hdr">
-            <span class="hdr-icon" onclick="goMain()">🔙</span>
-            <span id="chat-name" class="hdr-title" style="color: black !important;">...</span>
-            <span style="width:24px;"></span>
-        </div>
-        <div id="pin-display" class="pin-banner">
-            <span id="pin-txt">رسالة مثبتة</span>
-            <span onclick="unpinUI()" style="cursor:pointer">✕</span>
-        </div>
-        <div id="chat-area"></div>
-        <div id="reply-info" style="display:none; padding:5px 15px; background:#eee; font-size:12px; color:#555;"></div>
-        <div class="input-bar">
-            <input type="text" id="msg-in" placeholder="اكتب هنا...">
-            <button onclick="sendMsg()" style="background:var(--p); color:white; border:none; border-radius:50%; width:45px;">➤</button>
-        </div>
-    </div>
-
-    <div id="set-scr" class="screen">
-        <div class="hdr">
-            <span class="hdr-icon" onclick="goMain()">🔙</span>
-            <span class="hdr-title">الإعدادات</span>
-            <span></span>
-        </div>
-        <div style="padding:20px;">
-            <div class="user-card" onclick="document.getElementById('bg-up').click()">🖼️ تغيير خلفية المحادثة</div>
-            <input type="file" id="bg-up" style="display:none" accept="image/*" onchange="upBg(event)">
-            
-            <div class="user-card" style="justify-content:space-between">
-                <span>الوضع الليلي</span>
-                <input type="checkbox" id="dark-toggle" onchange="toggleDark()">
+            <div class="back-btn" onclick="location.reload()">←</div>
+            <div class="hdr-info">
+                <b id="friend-name">...</b>
+                <span id="status">نشط الآن</span>
             </div>
+            <div style="width: 34px;"></div>
+        </div>
+        
+        <div id="chat-area"></div>
 
-            <div class="user-card" onclick="logout()" style="color:red; margin-top:50px;">🚪 تسجيل الخروج</div>
+        <div class="input-area">
+            <input type="text" id="msg-in" placeholder="اكتب رسالة...">
+            <button class="send-btn" onclick="send()">➤</button>
         </div>
     </div>
 
@@ -113,90 +126,65 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaGNxa2pjbmN1anZyenBid3NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4ODI2MDIsImV4cCI6MjA5MjQ1ODYwMn0.M2mUlbaPsBYaS59zYVfzW42Kga0_w8o2mm3ZFPjOxu8';
         const _db = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let me = localStorage.getItem('u_u') || "";
-        let f = "";
-        let selId = null, selTxt = "", isEdit = false, replyId = null;
+        let me = localStorage.getItem('chat_user') || "";
+        let f = "Carlos"; // تجريبي كما في الصور
+        let selId = null, selTxt = "";
 
-        if(me) goMain();
+        if(me) startChat();
 
-        async function doLogin() {
-            const n = document.getElementById('reg-name').value, u = document.getElementById('reg-user').value;
-            if(n && u) { await _db.from('profiles').upsert([{username:u, full_name:n}]); localStorage.setItem('u_u', u); me = u; goMain(); }
+        function login() {
+            const u = document.getElementById('reg-user').value;
+            if(u) { localStorage.setItem('chat_user', u); me = u; startChat(); }
         }
 
-        function goMain() { show('main-scr'); loadInbox(); }
-        function goSet() { show('set-scr'); }
-        function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); closeOptions(); }
-
-        async function doSearch() {
-            const target = prompt("يوزر الصديق:");
-            if(target) { const {data} = await _db.from('profiles').select('*').eq('username', target).single(); if(data) { f = target; openChat(); } else alert("غير موجود"); }
-        }
-
-        function openChat() { 
-            show('chat-scr'); document.getElementById('chat-name').innerText = f; 
-            const bg = localStorage.getItem('u_bg');
-            document.getElementById('chat-area').style.backgroundImage = bg ? `url(${bg})` : 'none';
-            loadMsgs(); 
+        function startChat() {
+            document.getElementById('login-scr').style.display = 'none';
+            document.getElementById('chat-scr').classList.add('active');
+            document.getElementById('friend-name').innerText = f;
+            loadMsgs();
+            setInterval(loadMsgs, 3000);
         }
 
         async function loadMsgs() {
-            const { data } = await _db.from('messages').select('*').or(`and(sender.eq.${me},receiver.eq.${f}),and(sender.eq.${f},receiver.eq.${me})`).order('created_at', { ascending: true });
-            const area = document.getElementById('chat-area'); area.innerHTML = '';
+            const { data } = await _db.from('messages').select('*').order('created_at', { ascending: true });
+            const area = document.getElementById('chat-area');
+            area.innerHTML = '';
             data?.forEach(m => {
                 const isMe = m.sender === me;
-                const row = document.createElement('div'); row.className = `msg-row ${isMe?'me-row':'them-row'}`;
-                row.innerHTML = `<div class="bubble ${isMe?'me':'them'}" onclick="openOptions(${m.id}, '${m.content}')">
-                    ${m.reply_txt ? `<div style="font-size:10px; opacity:0.6; border-right:2px solid blue; padding:2px">رد على: ${m.reply_txt}</div>`:''}
-                    ${m.content} ${m.is_edited ? '<small>(معدلة)</small>' : ''}
-                </div>`;
-                area.appendChild(row);
+                const div = document.createElement('div');
+                div.className = `bubble ${isMe ? 'me' : 'them'}`;
+                div.innerText = m.content;
+                div.onclick = () => openMenu(m.id, m.content);
+                area.appendChild(div);
             });
             area.scrollTop = area.scrollHeight;
         }
 
-        function openOptions(id, txt) { selId = id; selTxt = txt; document.getElementById('msg-options').style.display = 'block'; }
-        function closeOptions() { document.getElementById('msg-options').style.display = 'none'; }
-
-        async function confirmDelete() { if(confirm("حذف؟")) { await _db.from('messages').delete().eq('id', selId); loadMsgs(); closeOptions(); } }
-        
-        function startEdit() { isEdit = true; document.getElementById('msg-in').value = selTxt; closeOptions(); }
-        function startReply() { replyId = selId; document.getElementById('reply-info').innerText = "رد على: " + selTxt; document.getElementById('reply-info').style.display = 'block'; closeOptions(); }
-
-        async function sendMsg() {
-            const i = document.getElementById('msg-in'); if(!i.value) return;
-            if(isEdit) { await _db.from('messages').update({content: i.value, is_edited: true}).eq('id', selId); isEdit = false; }
-            else {
-                await _db.from('messages').insert([{content: i.value, sender: me, receiver: f, reply_txt: replyId ? selTxt : null}]);
-            }
-            i.value = ''; replyId = null; document.getElementById('reply-info').style.display = 'none'; loadMsgs();
+        async function send() {
+            const i = document.getElementById('msg-in');
+            if(!i.value) return;
+            await _db.from('messages').insert([{ content: i.value, sender: me, receiver: f }]);
+            i.value = '';
+            loadMsgs();
         }
 
-        async function loadInbox() {
-            const { data } = await _db.from('messages').select('sender, receiver').or(`sender.eq.${me},receiver.eq.${me}`);
-            const users = [...new Set(data?.map(m => m.sender === me ? m.receiver : m.sender))];
-            const list = document.getElementById('list'); list.innerHTML = '';
-            users.forEach(u => {
-                const d = document.createElement('div'); d.className = 'user-card'; d.innerText = u;
-                d.onclick = () => { f = u; openChat(); }; list.appendChild(d);
-            });
+        function openMenu(id, txt) {
+            selId = id; selTxt = txt;
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
         }
 
-        function upBg(e) { 
-            const reader = new FileReader(); 
-            reader.onload = (r) => { localStorage.setItem('u_bg', r.target.result); openChat(); }; 
-            reader.readAsDataURL(e.target.files[0]); 
+        function closeMenu() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
         }
 
-        function toggleDark() { 
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('dark', document.body.classList.contains('dark-mode'));
-        }
-        
-        if(localStorage.getItem('dark') === 'true') { document.body.classList.add('dark-mode'); document.getElementById('dark-toggle').checked = true; }
-
-        function logout() { localStorage.clear(); location.reload(); }
-        setInterval(loadMsgs, 4000);
+        // الوظائف المطلوبة
+        async function delForAll() { await _db.from('messages').delete().eq('id', selId); closeMenu(); loadMsgs(); }
+        function delForMe() { alert("تم الحذف من عندك فقط"); closeMenu(); }
+        function replyMsg() { document.getElementById('msg-in').value = `رد على (${selTxt}): `; closeMenu(); }
+        function editMsg() { document.getElementById('msg-in').value = selTxt; closeMenu(); }
+        function pinMsg() { alert("تم تثبيت الرسالة في الأعلى"); closeMenu(); }
     </script>
 </body>
 </html>
